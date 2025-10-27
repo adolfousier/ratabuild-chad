@@ -3,11 +3,11 @@
 use ratatui::{
     Frame, Terminal,
     backend::Backend,
-    crossterm::event::{self, Event, KeyCode},
+    crossterm::event::{self, Event, KeyCode, KeyModifiers},
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::Span,
-    widgets::{Block, Borders, List, ListItem, ListState, Padding, Paragraph, StatefulWidget},
+    widgets::{Block, Borders, List, ListItem, ListState, Padding, Paragraph},
 };
 use crate::config::settings::{load_config, save_config};
 use std::sync::{Arc, Mutex};
@@ -38,7 +38,8 @@ pub struct App {
     pub config: Config,
     pub popup_state: PopupState,
     pub logs: Arc<Mutex<Vec<String>>>,
-    pub scanned: bool,
+    pub pending_action: Option<String>,
+    pub pending_failed_paths: Vec<String>,
 }
 
 impl App {
@@ -62,7 +63,8 @@ impl App {
             config,
             popup_state: PopupState::None,
             logs: Arc::new(Mutex::new(vec![])),
-            scanned: false,
+            pending_action: None,
+            pending_failed_paths: vec![],
         };
         app.load_artifacts().await;
         app.load_history().await;
@@ -84,6 +86,11 @@ impl App {
 
     async fn handle_event(&mut self) {
         if let Ok(Event::Key(key)) = event::read() {
+            // Global Shift+D for clear all builds
+            if key.code == KeyCode::Char('D') && key.modifiers.contains(KeyModifiers::SHIFT) {
+                self.popup_state = PopupState::new_clear_all_confirmation();
+                return;
+            }
             // Handle popup first
             if let Some(cmd) = self.popup_state.handle_key(&key) {
                 match cmd {
@@ -108,9 +115,69 @@ impl App {
                             }
                         } else if key == "Scan Path" {
                             self.config.scan_paths = vec![value];
+                         } else if key == "Enter sudo password" {
+                             if let Some(action) = self.pending_action.take() {
+                                 if action == "delete" {
+                                     let path = self.artifacts[self.selected].clone();
+                                     if self.delete_with_sudo(&path, Some(&value)) {
+                                         self.artifacts.remove(self.selected);
+                                         if self.selected >= self.artifacts.len() && self.selected > 0 {
+                                             self.selected -= 1;
+                                         }
+                                         // Update DB
+                                         let pool = self.logger.pool.clone();
+                                         let _ = tokio::spawn(async move {
+                                             let _ = sqlx::query("DELETE FROM builds WHERE artifact_path = $1").bind(&path).execute(&pool).await;
+                                         });
+                                         self.popup_state = PopupState::Info { message: "Artifact deleted with sudo.".to_string() };
+                                     } else {
+                                         self.popup_state = PopupState::Info { message: "Sudo delete failed.".to_string() };
+                                     }
+                                 } else if action == "clear_all" {
+                                     let failed_paths = self.pending_failed_paths.clone();
+                                     self.pending_failed_paths.clear();
+                                     let mut all_success = true;
+                                     for path in failed_paths {
+                                         if !self.delete_with_sudo(&path, Some(&value)) {
+                                             all_success = false;
+                                         }
+                                     }
+                                     if all_success {
+                                         self.artifacts.clear();
+                                         let _ = sqlx::query("DELETE FROM builds").execute(&self.logger.pool).await;
+                                         self.load_history().await;
+                                         self.popup_state = PopupState::Info { message: "All builds cleared with sudo.".to_string() };
+                                     } else {
+                                         self.popup_state = PopupState::Info { message: "Some sudo deletes failed.".to_string() };
+                                     }
+                                 }
+                             }
                         }
                         // Save config after changes
                         save_config(&self.config).ok();
+                    }
+                    PopupCommand::DeleteArtifact => {
+                        self.popup_state = PopupState::new_confirm_action("Delete this artifact?".to_string(), "delete".to_string());
+                    }
+                    PopupCommand::RebuildArtifact => {
+                        self.popup_state = PopupState::new_confirm_action("Rebuild this project?".to_string(), "rebuild".to_string());
+                    }
+                    PopupCommand::ClearAllBuilds => {
+                        self.clear_all_builds().await;
+                    }
+                    PopupCommand::ConfirmAction { action } => {
+                         match action.as_str() {
+                             "delete" => {
+                                 self.popup_state = PopupState::new_progress("Deleting artifact...".to_string());
+                                 self.delete_selected().await;
+                                 // delete_selected sets the popup_state
+                             }
+                            "rebuild" => {
+                                self.rebuild_selected();
+                                self.popup_state = PopupState::new_progress("Rebuilding project...".to_string());
+                            }
+                            _ => {}
+                        }
                     }
                 }
             } else if matches!(self.popup_state, PopupState::None) {
@@ -118,7 +185,7 @@ impl App {
                 match key.code {
                     KeyCode::Enter => {
                         if self.focused_panel == 0 {
-                            self.rebuild_selected();
+                            self.popup_state = PopupState::new_artifact_actions();
                         } else if self.focused_panel == 3 {
                             self.popup_state = PopupState::new_settings_list();
                         }
@@ -126,7 +193,7 @@ impl App {
                     KeyCode::Char('q') => self.should_quit = true,
                     KeyCode::Tab => self.focused_panel = (self.focused_panel + 1) % 5,
                     KeyCode::Char('s') => if !self.scanning { self.trigger_scan().await; },
-                    KeyCode::Char('d') => self.delete_selected(),
+                     KeyCode::Char('d') => self.popup_state = PopupState::new_confirm_action("Delete this artifact?".to_string(), "delete".to_string()),
                     KeyCode::Char('r') => self.rebuild_selected(),
                     KeyCode::Char('h') => self.load_history().await,
                     KeyCode::Char('e') => self.popup_state = PopupState::new_settings_list(),
@@ -168,7 +235,7 @@ impl App {
             ])
             .split(size);
 
-        let title = Paragraph::new("🐀 Ratabuild Chad - Build Artifact Dashboard")
+        let title = Paragraph::new("🐀 Ratabuild Chad - Build Artifact Tool")
             .style(
                 Style::default()
                     .fg(Color::Cyan)
@@ -182,7 +249,7 @@ impl App {
 
         self.popup_state.draw(f, size);
 
-        let footer = Paragraph::new("Tab: Focus Panel | s: Scan | h: Load History | ↑↓: Navigate | d: Delete | r: Rebuild | e: Edit Settings | l: Logs | q: Quit")
+        let footer = Paragraph::new("Tab: Focus Panel | s: Scan | h: Load History | ↑↓: Navigate | r: Rebuild | e: Edit Settings | l: Logs | Shift+D: Clear All | q: Quit")
             .style(Style::default().fg(Color::Black).bg(Color::LightGreen));
         f.render_widget(footer, chunks[2]);
     }
@@ -297,8 +364,9 @@ impl App {
         } else {
             let max_size = self.chart_data.iter().map(|(_, s)| *s).max().unwrap_or(1);
             let colors = [Color::Red, Color::Green, Color::Blue, Color::Yellow, Color::Magenta, Color::Cyan, Color::White];
+            let scan_path = self.config.scan_paths.first().map(|s| s.as_str()).unwrap_or("");
             self.chart_data.iter().enumerate().map(|(i, (name, size))| {
-                let bar_len = if max_size > 0 { (size * 20 / max_size) as usize } else { 0 };
+                let bar_len = if max_size > 0 { (size * 25 / max_size) as usize } else { 0 };
                 let bar = "█".repeat(bar_len);
                 let size_mb = size / 1_000_000;
                 let color = colors[i % colors.len()];
@@ -307,8 +375,13 @@ impl App {
                 } else {
                     Style::default().fg(color)
                 };
-                let short_name = if name.len() > 20 { format!("{}...", &name[..17]) } else { name.clone() };
-                ListItem::new(Span::styled(format!("{}: {} MB {}", short_name, size_mb, bar), style))
+                let relative_name = if let Some(stripped) = name.strip_prefix(&format!("{}/", scan_path)) {
+                    stripped
+                } else {
+                    name
+                };
+                let short_name = if relative_name.len() > 20 { format!("{}...", &relative_name[..17]) } else { relative_name.to_string() };
+                ListItem::new(Span::styled(format!("{} {} {} MB", short_name, bar, size_mb), style))
             }).collect()
         };
         let mut state = ListState::default();
@@ -461,21 +534,28 @@ impl App {
         self.load_history().await;
     }
 
-    fn delete_selected(&mut self) {
+    async fn delete_selected(&mut self) {
         if self.artifacts.is_empty() {
             return;
         }
-        let path = &self.artifacts[self.selected];
+        let path = self.artifacts[self.selected].clone();
         // Check for unusual files (e.g., bundle or many binaries)
-        if self.has_unusual_files(path) {
+        if self.has_unusual_files(&path) {
             return;
         }
-        // For safety, only delete if it's a known build dir
-        if std::fs::remove_dir_all(path).is_ok() {
+        // Try sudo -n first
+        if self.delete_with_sudo(&path, None) {
             self.artifacts.remove(self.selected);
             if self.selected >= self.artifacts.len() && self.selected > 0 {
                 self.selected -= 1;
             }
+            // Update DB
+            let _ = sqlx::query("DELETE FROM builds WHERE artifact_path = $1").bind(&path).execute(&self.logger.pool).await;
+            self.popup_state = PopupState::Info { message: "Artifact deleted.".to_string() };
+        } else {
+            // Prompt for password
+            self.pending_action = Some("delete".to_string());
+            self.popup_state = PopupState::new_input("Enter sudo password".to_string(), "".to_string());
         }
     }
 
@@ -597,5 +677,46 @@ impl App {
                 .ok();
         }
         // Add more as needed
+    }
+
+    async fn clear_all_builds(&mut self) {
+        let mut failed_paths = vec![];
+        for path in self.artifacts.clone() {
+            if !self.delete_with_sudo(&path, None) {
+                failed_paths.push(path);
+            }
+        }
+        if failed_paths.is_empty() {
+            self.artifacts.clear();
+            let _ = sqlx::query("DELETE FROM builds").execute(&self.logger.pool).await;
+            self.load_history().await;
+            self.popup_state = PopupState::Info { message: "All builds cleared.".to_string() };
+        } else {
+            self.pending_failed_paths = failed_paths;
+            self.pending_action = Some("clear_all".to_string());
+            self.popup_state = PopupState::new_input("Enter sudo password".to_string(), "".to_string());
+        }
+    }
+
+    fn delete_with_sudo(&self, path: &str, password: Option<&str>) -> bool {
+        use std::process::Command;
+        let mut cmd = Command::new("sudo");
+        if password.is_some() {
+            cmd.arg("-S");
+        } else {
+            cmd.arg("-n");
+        }
+        cmd.arg("rm").arg("-rf").arg(path);
+        if let Some(pwd) = password {
+            cmd.stdin(std::process::Stdio::piped());
+            let mut child = cmd.spawn().unwrap();
+            if let Some(mut stdin) = child.stdin.take() {
+                use std::io::Write;
+                let _ = stdin.write_all(format!("{}\n", pwd).as_bytes());
+            }
+            child.wait().unwrap().success()
+        } else {
+            cmd.status().unwrap().success()
+        }
     }
 }

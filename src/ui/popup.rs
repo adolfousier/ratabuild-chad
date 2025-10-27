@@ -14,6 +14,10 @@ pub enum PopupCommand {
     OpenDirBrowse,
     ToggleRemoval,
     SetValue { key: String, value: String },
+    DeleteArtifact,
+    RebuildArtifact,
+    ClearAllBuilds,
+    ConfirmAction { action: String },
 }
 
 pub enum PopupState {
@@ -23,6 +27,11 @@ pub enum PopupState {
     DirBrowse { path: String, items: Vec<String>, selected: usize },
     Logs { logs: std::sync::Arc<std::sync::Mutex<Vec<String>>> },
     Scanning { logs: std::sync::Arc<std::sync::Mutex<Vec<String>>> },
+    ArtifactActions { selected: usize },
+    ClearAllConfirmation,
+    ConfirmAction { message: String, action: String },
+    Progress { message: String },
+    Info { message: String },
 }
 
 impl PopupState {
@@ -42,6 +51,22 @@ impl PopupState {
 
     pub fn new_logs_popup(logs: std::sync::Arc<std::sync::Mutex<Vec<String>>>) -> Self {
         PopupState::Logs { logs }
+    }
+
+    pub fn new_artifact_actions() -> Self {
+        PopupState::ArtifactActions { selected: 0 }
+    }
+
+    pub fn new_clear_all_confirmation() -> Self {
+        PopupState::ClearAllConfirmation
+    }
+
+    pub fn new_confirm_action(message: String, action: String) -> Self {
+        PopupState::ConfirmAction { message, action }
+    }
+
+    pub fn new_progress(message: String) -> Self {
+        PopupState::Progress { message }
     }
 }
 
@@ -68,7 +93,12 @@ impl PopupState {
             PopupState::Input { title, input } => {
                 let popup_area = centered_rect(50, 10, area);
                 f.render_widget(Clear, popup_area);
-                let text = format!("{}: {}", title, input);
+                let display_input = if title == "Enter sudo password" {
+                    "*".repeat(input.len())
+                } else {
+                    input.clone()
+                };
+                let text = format!("{}: {}", title, display_input);
                 let para = Paragraph::new(text)
                     .block(Block::default().title("Edit (Enter: Apply, Esc: Cancel)").borders(Borders::ALL));
                 f.render_widget(para, popup_area);
@@ -112,6 +142,54 @@ impl PopupState {
                         .borders(Borders::ALL)
                         .padding(Padding::new(1, 1, 1, 0)),
                 );
+                f.render_widget(para, popup_area);
+            }
+            PopupState::ArtifactActions { selected } => {
+                let popup_area = centered_rect(25, 25, area);
+                f.render_widget(Clear, popup_area);
+                let options = ["Delete", "Rebuild"];
+                let mut items = Vec::new();
+                for (i, &opt) in options.iter().enumerate() {
+                    let style = if i == *selected {
+                        Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+                    } else {
+                        Style::default()
+                    };
+                    items.push(ListItem::new(Span::styled(opt, style)));
+                }
+                let list = List::new(items)
+                    .block(Block::default().title("Artifact Actions (↑↓ Enter Esc)").borders(Borders::ALL));
+                f.render_widget(list, popup_area);
+            }
+            PopupState::ClearAllConfirmation => {
+                let popup_area = centered_rect(50, 20, area);
+                f.render_widget(Clear, popup_area);
+                let text = "Are you sure you want to clear all builds?\nThis will delete all artifacts from the filesystem.\n(y: Confirm, n: Cancel)";
+                let para = Paragraph::new(text)
+                    .block(Block::default().title("⚠️ Clear All Builds").borders(Borders::ALL));
+                f.render_widget(para, popup_area);
+            }
+            PopupState::ConfirmAction { message, .. } => {
+                let popup_area = centered_rect(50, 15, area);
+                f.render_widget(Clear, popup_area);
+                let text = format!("{}\n\nPress Enter to confirm, Esc to cancel.", message);
+                let para = Paragraph::new(text)
+                    .block(Block::default().title("Confirm Action").borders(Borders::ALL));
+                f.render_widget(para, popup_area);
+            }
+            PopupState::Progress { message } => {
+                let popup_area = centered_rect(50, 10, area);
+                f.render_widget(Clear, popup_area);
+                let text = format!("{}\n\nPress Esc to close.", message);
+                let para = Paragraph::new(text)
+                    .block(Block::default().title("Progress").borders(Borders::ALL));
+                f.render_widget(para, popup_area);
+            }
+            PopupState::Info { message } => {
+                let popup_area = centered_rect(50, 10, area);
+                f.render_widget(Clear, popup_area);
+                let para = Paragraph::new(message.as_str())
+                    .block(Block::default().title("Info").borders(Borders::ALL));
                 f.render_widget(para, popup_area);
             }
             PopupState::None => {}
@@ -178,6 +256,72 @@ impl PopupState {
             },
             PopupState::Scanning { .. } => {
                 // No interaction during scanning
+            }
+            PopupState::ArtifactActions { selected } => match key.code {
+                KeyCode::Up => {
+                    if *selected > 0 {
+                        *selected -= 1;
+                    } else {
+                        *selected = 1; // Wrap to last
+                    }
+                }
+                KeyCode::Down => {
+                    if *selected < 1 {
+                        *selected += 1;
+                    } else {
+                        *selected = 0; // Wrap to first
+                    }
+                }
+                KeyCode::Enter => {
+                    let cmd = match *selected {
+                        0 => Some(PopupCommand::DeleteArtifact),
+                        1 => Some(PopupCommand::RebuildArtifact),
+                        _ => None,
+                    };
+                    if cmd.is_some() {
+                        *self = PopupState::None;
+                    }
+                    return cmd;
+                }
+                KeyCode::Esc => {
+                    *self = PopupState::None;
+                }
+                _ => {}
+            },
+            PopupState::ClearAllConfirmation => match key.code {
+                KeyCode::Char('y') | KeyCode::Char('Y') => {
+                    *self = PopupState::None;
+                    return Some(PopupCommand::ClearAllBuilds);
+                }
+                KeyCode::Char('n') | KeyCode::Char('N') | KeyCode::Esc => {
+                    *self = PopupState::None;
+                }
+                _ => {}
+            },
+            PopupState::ConfirmAction { action, .. } => {
+                let action = action.clone();
+                match key.code {
+                    KeyCode::Enter => {
+                        *self = PopupState::None;
+                        return Some(PopupCommand::ConfirmAction { action });
+                    }
+                    KeyCode::Esc => {
+                        *self = PopupState::None;
+                    }
+                    _ => {}
+                }
+            }
+            PopupState::Progress { .. } => match key.code {
+                KeyCode::Esc => {
+                    *self = PopupState::None;
+                }
+                _ => {}
+            },
+            PopupState::Info { .. } => match key.code {
+                KeyCode::Esc => {
+                    *self = PopupState::None;
+                }
+                _ => {}
             },
             PopupState::DirBrowse { path, items, selected } => match key.code {
                 KeyCode::Up => {

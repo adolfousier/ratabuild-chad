@@ -6,7 +6,7 @@ use std::fs;
 pub fn load_config() -> Config {
     dotenvy::dotenv().ok(); // Load .env file
     let database_url = std::env::var("DATABASE_URL").unwrap_or_else(|_| {
-        let user = std::env::var("POSTGRES_USERNAME").unwrap_or_else(|_| "postgres".to_string());
+        let user = std::env::var("POSTGRES_USERNAME").unwrap_or_else(|_| "ratabuildchad".to_string());
         let password =
             std::env::var("POSTGRES_PASSWORD").unwrap_or_else(|_| "password".to_string());
         format!(

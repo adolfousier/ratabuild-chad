@@ -18,4 +18,4 @@ services:
 
 volumes:
   postgres_data:
-    name: ratabuild-chat-tracker-postgres-data
+    name: ratabuild-chad-postgres-data

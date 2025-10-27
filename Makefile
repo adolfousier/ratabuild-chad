@@ -8,6 +8,26 @@ build:
 
 # Build and run the project
 run: build
+	@echo "Checking for .env file..."
+	@if [ ! -f .env ]; then \
+		echo "Generating .env file..."; \
+		PASSWORD=$$(openssl rand -base64 12 | tr -d "=+/" | cut -c1-16); \
+		echo "DATABASE_URL=postgres://ratabuildchad:$$PASSWORD@localhost:25851/ratabuild-chad" > .env; \
+		echo "POSTGRES_USERNAME=ratabuildchad" >> .env; \
+		echo "POSTGRES_PASSWORD=$$PASSWORD" >> .env; \
+		echo "DEBUG_LOGS_ENABLED=true" >> .env; \
+		echo ".env file generated with random password."; \
+	else \
+		echo ".env file already exists, skipping generation."; \
+	fi
+	@echo "Checking PostgreSQL status..."
+	@if ss -tln | grep -q :25851; then \
+		echo "PostgreSQL port 25851 is in use, assuming running."; \
+	else \
+		echo "Starting PostgreSQL..."; \
+		docker-compose up -d; \
+	fi
+	@echo "Starting Ratabuild Chad application..."
 	cargo run
 
 # Run tests

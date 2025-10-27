@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2025-10-27
+
+### Added
+- Automatic .env file generation in Makefile with random PostgreSQL password
+- PostgreSQL startup check and auto-start in Makefile run target
+- Sudo support for artifact deletion with password prompt
+- Artifact actions popup for delete/rebuild operations
+- Clear all builds feature with Shift+D shortcut
+- Progress and info popups for better user feedback
+- Password input masking for sudo operations
+
+### Changed
+- Default retention_days increased from 1 to 2 days
+- Default POSTGRES_USERNAME changed to 'ratabuildchad'
+- UI title updated to "Build Artifact Tool"
+- Footer shortcuts updated to include Shift+D for clear all
+- Artifact list display improved with relative paths and reordered columns
+- Fixed Docker Compose volume name typo
+
+### Fixed
+- Language detection tests updated to use detect_language_for_path function
+- Removed dependency on changing current directory in tests
+
+---
+
 ## [0.1.0] - 2025-10-26
 
 ### Added

@@ -1,18 +1,18 @@
 [![Rust](https://img.shields.io/badge/rust-%23000000.svg?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org)
 [![Ratatui](https://img.shields.io/badge/ratatui-%23000000.svg?style=for-the-badge&logo=rust&logoColor=white)](https://ratatui.rs)
-[![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com)
+[![Docker](https://img.shields.io/badge/docker-%23000000.svg?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com)
 [![Make](https://img.shields.io/badge/Make-%23000000.svg?style=for-the-badge&logo=gnu&logoColor=white)](https://www.gnu.org/software/make/)
-[![PostgreSQL](https://img.shields.io/badge/postgresql-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org)
+[![PostgreSQL](https://img.shields.io/badge/postgresql-%23000000.svg?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org)
 
 [![Ratabuild Chad](https://img.shields.io/badge/Ratabuild%20Chad-7f56da)](https://meetneura.ai) [![Powered by Neura AI](https://img.shields.io/badge/Powered%20by-Neura%20AI-7f56da)](https://meetneura.ai)
 
-# Ratachad
+# Ratabuild Chad
 
 **Track and manage build artifacts from multiple programming languages.**
 
 This TUI app runs in your terminal and helps you monitor build processes, track artifacts, and clean up old builds. Built with Ratatui.
 
-![Demo](screenshots/ratachad-demo.gif) <!-- Placeholder for demo image -->
+![Demo](src/screenshots/ratabuild-chad-demo.GIF)
 
 ## Table of Contents
 
@@ -31,7 +31,7 @@ This TUI app runs in your terminal and helps you monitor build processes, track 
 - **Selective deletion** - Choose individual or bulk delete with confirmations.
 - **Timeframe cleanup** - Set rules to auto-remove old artifacts.
 - **Rebuild integration** - Trigger rebuilds for tracked projects.
-- **Works everywhere** - Linux, macOS, and Windows.
+- **Works everywhere** - Currently tested on Linux (Wayland and X11); support for Windows and macOS may come soon.
 
 ## Quick Start
 
@@ -116,5 +116,3 @@ See [LICENSE](LICENSE) file for details.
 [![Star History Chart](https://api.star-history.com/svg?repos=adolfousier/ratabuild-chad&type=date&legend=top-left)](https://www.star-history.com/#adolfousier/ratabuild-chad&type=date&legend=top-left)
 
 **Built with ❤️ by the Neura AI team** | [Website](https://meetneura.ai) | [Issues](https://github.com/adolfousier/ratabuild-chad/issues)
-
-

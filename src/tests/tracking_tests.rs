@@ -5,7 +5,7 @@ use crate::tracking::logger::BuildLogger;
 
 #[tokio::test]
 async fn test_log_build() {
-    let database_url = "postgres://user:password@localhost:25851/ratabuild-chad";
+    let database_url = "postgres://user:password@localhost:25851/ratifact";
     if let Ok(logger) = BuildLogger::new(database_url).await {
         logger
             .log_build("/path/to/project", "rust", "/path/to/target", 1024)

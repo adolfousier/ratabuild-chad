@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for your interest in contributing to Ratabuild Chat! This project is open source and welcomes contributions from the community.
+Thank you for your interest in contributing to Ratifact by Neura AI! This project is open source and welcomes contributions from the community.
 
 ## License
 

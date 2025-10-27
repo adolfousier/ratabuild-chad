@@ -6,7 +6,7 @@ use sqlx::PgPool;
 
 #[tokio::test]
 async fn test_establish_connection() {
-    let database_url = "postgres://user:password@localhost:25851/ratabuild-chad";
+    let database_url = "postgres://user:password@localhost:25851/ratifact";
     if let Ok(pool) = establish_connection(database_url).await {
         assert!(pool.is_closed() == false);
     }
@@ -14,7 +14,7 @@ async fn test_establish_connection() {
 
 #[tokio::test]
 async fn test_create_tables() {
-    let database_url = "postgres://user:password@localhost:25851/ratabuild-chad";
+    let database_url = "postgres://user:password@localhost:25851/ratifact";
     // For test, assume DB is running, or use testcontainers, but for now skip if not connected
     if let Ok(pool) = PgPool::connect(database_url).await {
         create_tables(&pool).await.unwrap();

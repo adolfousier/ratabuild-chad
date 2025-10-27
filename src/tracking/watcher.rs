@@ -3,6 +3,7 @@
 use notify::{RecommendedWatcher, RecursiveMode, Result as NotifyResult, Watcher};
 use std::sync::{Arc, Mutex};
 use std::path::Path;
+use crate::utils::logger::log_to_file;
 
 #[derive(Clone)]
 pub struct BuildWatcher {
@@ -10,21 +11,26 @@ pub struct BuildWatcher {
 }
 
 impl BuildWatcher {
-    pub fn new() -> Self {
+    pub fn new(debug_logs_enabled: bool) -> Self {
         let watcher = RecommendedWatcher::new(
-            |res: Result<notify::Event, notify::Error>| match res {
+            move |res: Result<notify::Event, notify::Error>| match res {
                 Ok(event) => {
-                    // Only log create/modify/remove events, not access
-                    if matches!(
-                        event.kind,
-                        notify::EventKind::Create(_)
-                            | notify::EventKind::Modify(_)
-                            | notify::EventKind::Remove(_)
-                    ) {
-                        println!("Build change detected: {:?}", event);
+                    if debug_logs_enabled {
+                        if matches!(
+                            event.kind,
+                            notify::EventKind::Create(_)
+                                | notify::EventKind::Modify(_)
+                                | notify::EventKind::Remove(_)
+                        ) {
+                            log_to_file(&format!("Build change detected: {:?}", event));
+                        }
                     }
                 }
-                Err(e) => println!("Watch error: {:?}", e),
+                Err(e) => {
+                    if debug_logs_enabled {
+                        log_to_file(&format!("Watch error: {:?}", e));
+                    }
+                }
             },
             notify::Config::default(),
         )

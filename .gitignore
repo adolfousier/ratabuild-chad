@@ -8,8 +8,8 @@ plans/
 data/
 server/data/
 data/
-db/
 client/dist
+command.md
 
 src/plans
 

@@ -11,6 +11,7 @@ use ratatui::crossterm::{
 use ratatui::{Terminal, backend::CrosstermBackend};
 use std::io::stdout;
 use ui::app::App;
+use utils::logger::log_to_file;
 
 
 
@@ -52,7 +53,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut app = match App::new().await {
         Ok(app) => app,
         Err(e) => {
-            eprintln!("App init error: {:?}", e);
+            log_to_file(&format!("App init error: {:?}", e));
             return Err(e);
         }
     };
@@ -66,7 +67,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     terminal.show_cursor()?;
 
     if let Err(err) = res {
-        eprintln!("Run error: {:?}", err);
+        log_to_file(&format!("Run error: {:?}", err));
     }
 
     Ok(())

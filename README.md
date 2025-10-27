@@ -4,15 +4,15 @@
 [![Make](https://img.shields.io/badge/Make-%23000000.svg?style=for-the-badge&logo=gnu&logoColor=white)](https://www.gnu.org/software/make/)
 [![PostgreSQL](https://img.shields.io/badge/postgresql-%23000000.svg?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org)
 
-[![Ratabuild Chad](https://img.shields.io/badge/Ratabuild%20Chad-7f56da)](https://meetneura.ai) [![Powered by Neura AI](https://img.shields.io/badge/Powered%20by-Neura%20AI-7f56da)](https://meetneura.ai)
+[![Ratifact](https://img.shields.io/badge/Ratifact-7f56da)](https://meetneura.ai) [![Powered by Neura AI](https://img.shields.io/badge/Powered%20by-Neura%20AI-7f56da)](https://meetneura.ai)
 
-# Ratabuild Chad
+# Ratifact
 
 **Track and manage build artifacts from multiple programming languages.**
 
 This TUI app runs in your terminal and helps you monitor build processes, track artifacts, and clean up old builds. Built with Ratatui.
 
-![Demo](src/screenshots/ratabuild-chad-demo.GIF)
+![Demo](src/screenshots/ratifact-demo.png)
 
 ## Table of Contents
 
@@ -44,11 +44,11 @@ This TUI app runs in your terminal and helps you monitor build processes, track 
 ### Installation
 
 ```bash
-git clone https://github.com/yourusername/rats-build-chad.git
-cd rats-build-chad
+git clone https://github.com/adolfousier/ratifact.git
+cd ratifact
 docker-compose up -d  # Start PostgreSQL
 make build
-./target/debug/rats-build-chad
+./target/debug/ratifact
 ```
 
 ### Build with Make
@@ -111,8 +111,4 @@ Found a bug or want to add something? Check [CONTRIBUTING.md](CONTRIBUTING.md).
 
 See [LICENSE](LICENSE) file for details.
 
-## Star History Chart
-
-[![Star History Chart](https://api.star-history.com/svg?repos=adolfousier/ratabuild-chad&type=date&legend=top-left)](https://www.star-history.com/#adolfousier/ratabuild-chad&type=date&legend=top-left)
-
-**Built with ❤️ by the Neura AI team** | [Website](https://meetneura.ai) | [Issues](https://github.com/adolfousier/ratabuild-chad/issues)
+**Built with ❤️ by the Neura AI team** | [Website](https://meetneura.ai) | [Issues](https://github.com/adolfousier/ratifact/issues)

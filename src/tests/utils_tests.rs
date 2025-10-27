@@ -1,6 +1,6 @@
 // Utils tests
 
-use crate::utils::detect_language;
+use crate::utils::detect_language_for_path;
 use std::fs;
 use tempfile::TempDir;
 
@@ -8,109 +8,108 @@ use tempfile::TempDir;
 fn test_detect_language_rust() {
     let temp_dir = TempDir::new().unwrap();
     fs::write(temp_dir.path().join("Cargo.toml"), "").unwrap();
-    std::env::set_current_dir(&temp_dir).unwrap();
-    assert_eq!(detect_language(), "Rust");
+    assert_eq!(detect_language_for_path(temp_dir.path().to_str().unwrap()), "Rust");
 }
 
 #[test]
 fn test_detect_language_js() {
     let temp_dir = TempDir::new().unwrap();
     fs::write(temp_dir.path().join("package.json"), "").unwrap();
-    std::env::set_current_dir(&temp_dir).unwrap();
-    assert_eq!(detect_language(), "JavaScript");
+
+    assert_eq!(detect_language_for_path(temp_dir.path().to_str().unwrap()), "JavaScript");
 }
 
 #[test]
 fn test_detect_language_python() {
     let temp_dir = TempDir::new().unwrap();
     fs::write(temp_dir.path().join("pyproject.toml"), "").unwrap();
-    std::env::set_current_dir(&temp_dir).unwrap();
-    assert_eq!(detect_language(), "Python");
+
+    assert_eq!(detect_language_for_path(temp_dir.path().to_str().unwrap()), "Python");
 }
 
 #[test]
 fn test_detect_language_go() {
     let temp_dir = TempDir::new().unwrap();
     fs::write(temp_dir.path().join("go.mod"), "").unwrap();
-    std::env::set_current_dir(&temp_dir).unwrap();
-    assert_eq!(detect_language(), "Go");
+
+    assert_eq!(detect_language_for_path(temp_dir.path().to_str().unwrap()), "Go");
 }
 
 #[test]
 fn test_detect_language_c_cpp() {
     let temp_dir = TempDir::new().unwrap();
     fs::write(temp_dir.path().join("Makefile"), "").unwrap();
-    std::env::set_current_dir(&temp_dir).unwrap();
-    assert_eq!(detect_language(), "C/C++");
+
+    assert_eq!(detect_language_for_path(temp_dir.path().to_str().unwrap()), "C/C++");
 }
 
 #[test]
 fn test_detect_language_java() {
     let temp_dir = TempDir::new().unwrap();
     fs::write(temp_dir.path().join("pom.xml"), "").unwrap();
-    std::env::set_current_dir(&temp_dir).unwrap();
-    assert_eq!(detect_language(), "Java");
+
+    assert_eq!(detect_language_for_path(temp_dir.path().to_str().unwrap()), "Java");
 }
 
 #[test]
 fn test_detect_language_php() {
     let temp_dir = TempDir::new().unwrap();
     fs::write(temp_dir.path().join("composer.json"), "").unwrap();
-    std::env::set_current_dir(&temp_dir).unwrap();
-    assert_eq!(detect_language(), "PHP");
+
+    assert_eq!(detect_language_for_path(temp_dir.path().to_str().unwrap()), "PHP");
 }
 
 #[test]
 fn test_detect_language_ruby() {
     let temp_dir = TempDir::new().unwrap();
     fs::write(temp_dir.path().join("Gemfile"), "").unwrap();
-    std::env::set_current_dir(&temp_dir).unwrap();
-    assert_eq!(detect_language(), "Ruby");
+
+    assert_eq!(detect_language_for_path(temp_dir.path().to_str().unwrap()), "Ruby");
 }
 
 #[test]
 fn test_detect_language_swift() {
     let temp_dir = TempDir::new().unwrap();
     fs::write(temp_dir.path().join("Package.swift"), "").unwrap();
-    std::env::set_current_dir(&temp_dir).unwrap();
-    assert_eq!(detect_language(), "Swift");
+
+    assert_eq!(detect_language_for_path(temp_dir.path().to_str().unwrap()), "Swift");
 }
 
 #[test]
 fn test_detect_language_kotlin() {
     let temp_dir = TempDir::new().unwrap();
     fs::write(temp_dir.path().join("build.gradle.kts"), "").unwrap();
-    std::env::set_current_dir(&temp_dir).unwrap();
-    assert_eq!(detect_language(), "Kotlin");
+
+    assert_eq!(detect_language_for_path(temp_dir.path().to_str().unwrap()), "Kotlin");
 }
 
 #[test]
 fn test_detect_language_scala() {
     let temp_dir = TempDir::new().unwrap();
     fs::write(temp_dir.path().join("build.sbt"), "").unwrap();
-    std::env::set_current_dir(&temp_dir).unwrap();
-    assert_eq!(detect_language(), "Scala");
+
+    assert_eq!(detect_language_for_path(temp_dir.path().to_str().unwrap()), "Scala");
 }
 
 #[test]
 fn test_detect_language_haskell() {
     let temp_dir = TempDir::new().unwrap();
     fs::write(temp_dir.path().join("stack.yaml"), "").unwrap();
-    std::env::set_current_dir(&temp_dir).unwrap();
-    assert_eq!(detect_language(), "Haskell");
+
+    assert_eq!(detect_language_for_path(temp_dir.path().to_str().unwrap()), "Haskell");
 }
 
 #[test]
 fn test_detect_language_elixir() {
     let temp_dir = TempDir::new().unwrap();
     fs::write(temp_dir.path().join("mix.exs"), "").unwrap();
-    std::env::set_current_dir(&temp_dir).unwrap();
-    assert_eq!(detect_language(), "Elixir");
+
+    assert_eq!(detect_language_for_path(temp_dir.path().to_str().unwrap()), "Elixir");
 }
 
 #[test]
 fn test_detect_language_unknown() {
     let temp_dir = TempDir::new().unwrap();
-    std::env::set_current_dir(&temp_dir).unwrap();
-    assert_eq!(detect_language(), "Unknown");
+
+    assert_eq!(detect_language_for_path(temp_dir.path().to_str().unwrap()), "Unknown");
 }

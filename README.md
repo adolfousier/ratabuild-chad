@@ -12,7 +12,7 @@
 
 This TUI app runs in your terminal and helps you monitor build processes, track artifacts, and clean up old builds. Built with Ratatui.
 
-![Demo](src/screenshots/ratifact-demo.png)
+![Demo](src/screenshots/ratifact-demo.GIF)
 
 ## Table of Contents
 

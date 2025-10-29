@@ -111,4 +111,8 @@ Found a bug or want to add something? Check [CONTRIBUTING.md](CONTRIBUTING.md).
 
 See [LICENSE](LICENSE) file for details.
 
+## Star History Chart
+
+[![Star History Chart](https://api.star-history.com/svg?repos=adolfousier/ratabuild-chad&type=date&legend=top-left)](https://www.star-history.com/#adolfousier/ratabuild-chad&type=date&legend=top-left)
+
 **Built with ❤️ by the Neura AI team** | [Website](https://meetneura.ai) | [Issues](https://github.com/adolfousier/ratifact/issues)

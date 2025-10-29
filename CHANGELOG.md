@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.11] - 2025-10-29
+
+### Fixed
+
+- Removed unused methods `load_artifacts` and `load_history` from BuildLogger
+- Removed unused import `Row` from logger.rs
+- Updated Makefile to use `docker compose` instead of deprecated `docker-compose` command
+
+---
+
 ## [0.1.1] - 2025-10-27
 
 ### Added

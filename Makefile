@@ -25,7 +25,7 @@ run: build
 		echo "PostgreSQL port 25851 is in use, assuming running."; \
 	else \
 		echo "Starting PostgreSQL..."; \
-		docker-compose up -d; \
+		docker compose up -d; \
 	fi
 	@echo "Starting Ratifact application..."
 	cargo run

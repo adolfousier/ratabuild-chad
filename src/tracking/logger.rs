@@ -2,7 +2,7 @@
 
 use crate::db::connection::establish_connection;
 use crate::db::schema::create_tables;
-use sqlx::{PgPool, Row};
+use sqlx::PgPool;
 
 #[derive(Clone)]
 pub struct BuildLogger {
@@ -33,26 +33,6 @@ impl BuildLogger {
         .execute(&self.pool)
         .await?;
         Ok(())
-    }
-
-    pub async fn load_artifacts(&self) -> Result<Vec<String>, sqlx::Error> {
-        let rows = sqlx::query("SELECT DISTINCT artifact_path FROM builds ORDER BY artifact_path")
-            .fetch_all(&self.pool)
-            .await?;
-        Ok(rows.into_iter().map(|row| row.get("artifact_path")).collect())
-    }
-
-    pub async fn load_history(&self) -> Result<Vec<String>, sqlx::Error> {
-        let rows = sqlx::query("SELECT project_path, language, COUNT(*) as count FROM builds GROUP BY project_path, language ORDER BY project_path")
-            .fetch_all(&self.pool)
-            .await?;
-        let history: Vec<String> = rows.into_iter().map(|row| {
-            let project: String = row.get("project_path");
-            let language: String = row.get("language");
-            let count: i64 = row.get("count");
-            format!("{} ({}) - {} builds", project, language, count)
-        }).collect();
-        Ok(history)
     }
 }
 

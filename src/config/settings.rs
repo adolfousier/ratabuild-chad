@@ -19,8 +19,8 @@ pub fn load_config() -> Config {
         .unwrap_or_else(|_| "false".to_string())
         .to_lowercase() == "true";
 
-    // Try to load from config.toml
-    if let Ok(content) = fs::read_to_string("config.toml") {
+    // Try to load from src/config/config.toml
+    if let Ok(content) = fs::read_to_string("src/config/config.toml") {
         if let Ok(mut config) = toml::from_str::<Config>(&content) {
             // Override database_url and debug_logs_enabled from env
             config.database_url = database_url;
@@ -46,7 +46,7 @@ pub fn save_config(config: &Config) -> Result<(), Box<dyn std::error::Error>> {
         debug_logs_enabled: config.debug_logs_enabled,
     };
     let toml_string = toml::to_string(&save_config)?;
-    fs::write("config.toml", toml_string)?;
+    fs::write("src/config/config.toml", toml_string)?;
     Ok(())
 }
 

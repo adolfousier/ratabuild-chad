@@ -16,6 +16,11 @@ use utils::logger::log_to_file;
 
 
 #[cfg(test)]
+mod config_tests {
+    include!("tests/config_tests.rs");
+}
+
+#[cfg(test)]
 mod db_tests {
     include!("tests/db_tests.rs");
 }

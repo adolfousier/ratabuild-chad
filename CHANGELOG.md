@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.13] - 2025-10-30
+
+### Added
+
+- **Automatic retention-based cleanup** - Artifacts older than `retention_days` setting are automatically deleted when enabled
+- **Automatic removal confirmation dialog** - Warning popup when enabling automatic removal with instructions to verify build directories
+- **Enhanced confirmation popups** - Larger dialogs with better visibility and high-contrast styling (yellow/red backgrounds)
+- **Improved delete action popup** - Larger red background popup for artifact deletion actions with clear warnings
+- **Enhanced clear all confirmation** - Prominent red warning dialog for bulk artifact deletion with emphasis on permanent nature
+
+### Changed
+
+- Enlarged automatic removal confirmation from 50x15 to 70x35 with yellow background for better visibility
+- Enlarged artifact action popup from 25x25 to 60x30 with red background and padding
+- Enlarged clear all confirmation to 70x35 with red background and enhanced warning message
+- Removed 'h: History' from footer - never implemented, was confusing users
+- Removed '↑↓: Navigate' from footer - implicit navigation with arrow keys, cleaned up clutter
+- Improved footer to show only active commands: Tab, s, d, x, r, e, l, Shift+D, q
+- Added three-layer safety protection for automatic removal: database-backed paths, build directory whitelist, age filter
+
+### Fixed
+
+- Config file corruption during tests - tests now use default `/srv` path instead of test paths
+- Watcher test failures in CI environments - gracefully handle inotify limits instead of panicking
+
+---
+
 ## [0.1.12] - 2025-10-30
 
 ### Added

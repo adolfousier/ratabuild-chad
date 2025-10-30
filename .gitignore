@@ -9,7 +9,7 @@ data/
 server/data/
 data/
 client/dist
-command.md
+commands.md
 
 src/plans
 

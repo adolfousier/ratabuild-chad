@@ -48,10 +48,10 @@ fn test_save_and_load_config() {
     // Create a test config
     let test_config = Config {
         database_url: "postgres://test:test@localhost/testdb".to_string(),
-        scan_paths: vec!["/test/path".to_string()],
-        retention_days: 15,
+        scan_paths: vec!["/srv".to_string()],
+        retention_days: 30,
         debug_logs_enabled: false,
-        excluded_paths: vec!["/test/excluded".to_string()],
+        excluded_paths: vec![],
     };
 
     // Save the config

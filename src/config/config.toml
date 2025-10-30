@@ -1,5 +1,5 @@
 database_url = ""
 scan_paths = ["/srv"]
-retention_days = 1
-debug_logs_enabled = true
+retention_days = 30
+debug_logs_enabled = false
 excluded_paths = []

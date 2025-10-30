@@ -51,6 +51,7 @@ fn test_save_and_load_config() {
         scan_paths: vec!["/test/path".to_string()],
         retention_days: 15,
         debug_logs_enabled: false,
+        excluded_paths: vec!["/test/excluded".to_string()],
     };
 
     // Save the config
@@ -64,4 +65,5 @@ fn test_save_and_load_config() {
     let loaded_config = load_config();
     assert_eq!(loaded_config.scan_paths, test_config.scan_paths, "scan_paths should match after save/load");
     assert_eq!(loaded_config.retention_days, test_config.retention_days, "retention_days should match after save/load");
+    assert_eq!(loaded_config.excluded_paths, test_config.excluded_paths, "excluded_paths should match after save/load");
 }

@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.12] - 2025-10-30
+
+### Added
+
+- **Cross-platform installation support** - Complete setup scripts for Linux, macOS, and Windows
+- **Linux installation script** (src/scripts/linux/install.sh) - Automatic dependency installation and build
+- **macOS installation script** (src/scripts/macos/install.sh) - Homebrew-based setup with Docker Desktop integration
+- **Windows installation script** (src/scripts/windows/install.ps1) - PowerShell-based setup using winget package manager
+- **Path exclusion feature** - New 'x' keyboard shortcut to exclude artifacts from future scans
+- **Excluded paths management** - New "Excluded Paths" option in Settings menu to view and manage excluded paths
+- **Exclusion confirmation dialogs** - Confirmation prompts when excluding paths and removing from exclusion list
+- **Excluded paths persistence** - Excluded paths are stored in config.toml and persist across sessions
+- **Excluded paths display** - Settings panel shows count of excluded paths
+
+### Changed
+
+- Updated README with one-liner installation commands for all platforms
+- Footer shortcuts now include 'x: Exclude' option
+- Settings menu expanded from 3 to 4 options: Retention Days, Scan Path, Automatic Removal, and Excluded Paths
+- Scan logic now respects excluded paths and skips them during artifact discovery
+- Automatic rescan triggered when removing a path from exclusion list
+- Updated "Works everywhere" claim to reflect full cross-platform support
+
+---
+
 ## [0.1.11] - 2025-10-29
 
 ### Fixed

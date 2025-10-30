@@ -18,6 +18,7 @@ pub enum PopupCommand {
     RebuildArtifact,
     ClearAllBuilds,
     ConfirmAction { action: String },
+    OpenExcludedPaths,
 }
 
 pub enum PopupState {
@@ -32,6 +33,7 @@ pub enum PopupState {
     ConfirmAction { message: String, action: String },
     Progress { message: String },
     Info { message: String },
+    ExcludedPathsList { paths: Vec<String>, selected: usize },
 }
 
 impl PopupState {
@@ -68,15 +70,19 @@ impl PopupState {
     pub fn new_progress(message: String) -> Self {
         PopupState::Progress { message }
     }
+
+    pub fn new_excluded_paths(paths: Vec<String>) -> Self {
+        PopupState::ExcludedPathsList { paths, selected: 0 }
+    }
 }
 
 impl PopupState {
     pub fn draw(&self, f: &mut Frame, area: Rect) {
         match self {
             PopupState::SettingsList { selected } => {
-                let popup_area = centered_rect(25, 25, area);
+                let popup_area = centered_rect(25, 30, area);
                 f.render_widget(Clear, popup_area);
-                let options = ["Retention Days", "Scan Path", "Automatic Removal"];
+                let options = ["Retention Days", "Scan Path", "Automatic Removal", "Excluded Paths"];
                 let mut items = Vec::new();
                 for (i, &opt) in options.iter().enumerate() {
                     let style = if i == *selected {
@@ -194,6 +200,26 @@ impl PopupState {
                     .block(Block::default().title("Info").borders(Borders::ALL));
                 f.render_widget(para, popup_area);
             }
+            PopupState::ExcludedPathsList { paths, selected } => {
+                let popup_area = centered_rect(60, 40, area);
+                f.render_widget(Clear, popup_area);
+                let mut items = Vec::new();
+                if paths.is_empty() {
+                    items.push(ListItem::new(Span::raw("(No excluded paths yet)")));
+                } else {
+                    for (i, path) in paths.iter().enumerate() {
+                        let style = if i == *selected {
+                            Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+                        } else {
+                            Style::default()
+                        };
+                        items.push(ListItem::new(Span::styled(path.as_str(), style)));
+                    }
+                }
+                let list = List::new(items)
+                    .block(Block::default().title("Excluded Paths (↑↓ Enter to remove Esc)").borders(Borders::ALL));
+                f.render_widget(list, popup_area);
+            }
             PopupState::None => {}
         }
     }
@@ -205,11 +231,11 @@ impl PopupState {
                     if *selected > 0 {
                         *selected -= 1;
                     } else {
-                        *selected = 2; // Wrap to last
+                        *selected = 3; // Wrap to last
                     }
                 }
                 KeyCode::Down => {
-                    if *selected < 2 {
+                    if *selected < 3 {
                         *selected += 1;
                     } else {
                         *selected = 0; // Wrap to first
@@ -220,6 +246,7 @@ impl PopupState {
                         0 => Some(PopupCommand::OpenInput { title: "Retention Days".to_string(), initial: "".to_string() }), // will set in app
                         1 => Some(PopupCommand::OpenDirBrowse),
                         2 => Some(PopupCommand::ToggleRemoval),
+                        3 => Some(PopupCommand::OpenExcludedPaths),
                         _ => None,
                     };
                     if cmd.is_some() {
@@ -376,6 +403,36 @@ impl PopupState {
                     let current_path = path.clone();
                     *self = PopupState::None;
                     return Some(PopupCommand::SetValue { key: "Scan Path".to_string(), value: current_path });
+                }
+                KeyCode::Esc => {
+                    *self = PopupState::None;
+                }
+                _ => {}
+            },
+            PopupState::ExcludedPathsList { paths, selected } => match key.code {
+                KeyCode::Up => {
+                    if *selected > 0 {
+                        *selected -= 1;
+                    } else if !paths.is_empty() {
+                        *selected = paths.len() - 1; // Wrap to last
+                    }
+                }
+                KeyCode::Down => {
+                    if paths.is_empty() {
+                        // No paths to navigate
+                    } else if *selected < paths.len() - 1 {
+                        *selected += 1;
+                    } else {
+                        *selected = 0; // Wrap to first
+                    }
+                }
+                KeyCode::Enter => {
+                    if !paths.is_empty() {
+                        let path = paths[*selected].clone();
+                        let message = format!("Remove '{}' from exclusion list?", path);
+                        *self = PopupState::new_confirm_action(message, format!("remove_excluded:{}", path));
+                        return None;
+                    }
                 }
                 KeyCode::Esc => {
                     *self = PopupState::None;

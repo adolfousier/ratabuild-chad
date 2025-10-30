@@ -195,18 +195,43 @@ impl App {
                         self.clear_all_builds().await;
                     }
                     PopupCommand::ConfirmAction { action } => {
-                         match action.as_str() {
-                             "delete" => {
-                                 self.popup_state = PopupState::new_progress("Deleting artifact...".to_string());
-                                 self.delete_selected().await;
-                                 // delete_selected sets the popup_state
+                         if action.starts_with("remove_excluded:") {
+                             let path = action.strip_prefix("remove_excluded:").unwrap_or("").to_string();
+                             self.config.excluded_paths.retain(|p| p != &path);
+                             save_config(&self.config).ok();
+                             self.popup_state = PopupState::Info { message: format!("Removed from exclusion list. Rescanning...", ) };
+                             if !self.scanning {
+                                 self.trigger_scan().await;
                              }
-                            "rebuild" => {
-                                self.rebuild_selected();
-                                self.popup_state = PopupState::new_progress("Rebuilding project...".to_string());
+                         } else {
+                             match action.as_str() {
+                                 "delete" => {
+                                     self.popup_state = PopupState::new_progress("Deleting artifact...".to_string());
+                                     self.delete_selected().await;
+                                     // delete_selected sets the popup_state
+                                 }
+                                "rebuild" => {
+                                    self.rebuild_selected();
+                                    self.popup_state = PopupState::new_progress("Rebuilding project...".to_string());
+                                }
+                                "exclude" => {
+                                    if self.selected < self.artifacts.len() {
+                                        let path = self.artifacts[self.selected].clone();
+                                        self.config.excluded_paths.push(path);
+                                        self.artifacts.remove(self.selected);
+                                        if self.selected >= self.artifacts.len() && self.selected > 0 {
+                                            self.selected -= 1;
+                                        }
+                                        save_config(&self.config).ok();
+                                        self.popup_state = PopupState::Info { message: "Path added to exclusion list.".to_string() };
+                                    }
+                                }
+                                _ => {}
                             }
-                            _ => {}
-                        }
+                         }
+                    }
+                    PopupCommand::OpenExcludedPaths => {
+                        self.popup_state = PopupState::new_excluded_paths(self.config.excluded_paths.clone());
                     }
                 }
             } else if matches!(self.popup_state, PopupState::None) {
@@ -223,6 +248,11 @@ impl App {
                     KeyCode::Tab => self.focused_panel = (self.focused_panel + 1) % 5,
                     KeyCode::Char('s') => if !self.scanning { self.trigger_scan().await; },
                      KeyCode::Char('d') => self.popup_state = PopupState::new_confirm_action("Delete this artifact?".to_string(), "delete".to_string()),
+                    KeyCode::Char('x') | KeyCode::Char('X') => {
+                        if self.focused_panel == 0 && self.selected < self.artifacts.len() {
+                            self.popup_state = PopupState::new_confirm_action("Exclude this path from scanning?".to_string(), "exclude".to_string());
+                        }
+                    },
                     KeyCode::Char('r') => self.rebuild_selected(),
                     KeyCode::Char('h') => self.load_history().await,
                     KeyCode::Char('e') => self.popup_state = PopupState::new_settings_list(),
@@ -284,7 +314,7 @@ impl App {
 
         self.popup_state.draw(f, size);
 
-        let footer = Paragraph::new("Tab: Focus Panel | s: Scan | h: Load History | ↑↓: Navigate | r: Rebuild | e: Edit Settings | l: Logs | Shift+D: Clear All | q: Quit")
+        let footer = Paragraph::new("Tab: Focus | s: Scan | h: History | ↑↓: Navigate | d: Delete | x: Exclude | r: Rebuild | e: Settings | l: Logs | Shift+D: Clear All | q: Quit")
             .style(Style::default().fg(Color::Black).bg(Color::LightGreen));
         f.render_widget(footer, chunks[2]);
     }
@@ -444,12 +474,14 @@ impl App {
         };
         let masked_db = Self::mask_db_url(&self.config.database_url);
         let removal_status = if self.automatic_removal { "Enabled" } else { "Disabled" };
+        let excluded_count = self.config.excluded_paths.len();
         let text = format!(
-            "DB: {}\nPaths: {}\nRetention Days: {}\nAutomatic Removal: {}",
+            "DB: {}\nPaths: {}\nRetention Days: {}\nAutomatic Removal: {}\nExcluded Paths: {}",
             masked_db,
             self.config.scan_paths.join(","),
             self.config.retention_days,
-            removal_status
+            removal_status,
+            excluded_count
         );
         let para = Paragraph::new(text).block(
             Block::default()
@@ -494,6 +526,7 @@ impl App {
         } else {
             self.config.scan_paths.clone()
         };
+        let excluded_paths = self.config.excluded_paths.clone();
         let logs_clone = Arc::clone(&self.logs);
         let artifacts_clone = Arc::new(Mutex::new(vec![]));
         let _artifacts_clone2 = Arc::clone(&artifacts_clone);
@@ -534,8 +567,12 @@ impl App {
                 {
                     if entry.file_type().is_dir() {
                         let name = entry.file_name().to_string_lossy();
-                        if common_dirs.contains(&name.as_ref()) {
-                            let path_str = entry.path().display().to_string();
+                        let path_str = entry.path().display().to_string();
+
+                        // Check if path is in excluded list
+                        let is_excluded = excluded_paths.iter().any(|ex| path_str.contains(ex));
+
+                        if common_dirs.contains(&name.as_ref()) && !is_excluded {
                             let project_path = entry.path().parent().unwrap_or(Path::new(".")).display().to_string();
                             let language = detect_language_for_path(&project_path);
                             let size = calculate_dir_size(&path_str);

@@ -31,24 +31,43 @@ This TUI app runs in your terminal and helps you monitor build processes, track 
 - **Selective deletion** - Choose individual or bulk delete with confirmations.
 - **Timeframe cleanup** - Set rules to auto-remove old artifacts.
 - **Rebuild integration** - Trigger rebuilds for tracked projects.
-- **Works everywhere** - Currently tested on Linux (Wayland and X11); support for Windows and macOS may come soon.
+- **Works everywhere** - Fully supported on Linux, macOS, and Windows with easy one-liner installation.
 
-## Quick Start
+## Quick Start (Easiest Way)
 
-### Prerequisites
+### Linux
 
-- [Rust](https://www.rust-lang.org/tools/install) installed
-- [Docker](https://www.docker.com/products/docker-desktop) for PostgreSQL
-- PostgreSQL running (use provided compose.yml)
-
-### Installation
+Copy and paste this into your terminal:
 
 ```bash
-git clone https://github.com/adolfousier/ratifact.git
-cd ratifact
-docker-compose up -d  # Start PostgreSQL
-make build
-./target/debug/ratifact
+sudo apt update && sudo apt install -y curl git && curl -fsSL https://raw.githubusercontent.com/adolfousier/ratifact/main/src/scripts/linux/install.sh | bash
+```
+
+That's it! The app will build and start automatically.
+
+### macOS
+
+1. Install [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/) first (or the script will install it)
+2. Then paste this into Terminal:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/adolfousier/ratifact/main/src/scripts/macos/install.sh | bash
+```
+
+### Windows
+
+Open PowerShell as Administrator and run:
+
+```powershell
+powershell -Command "iwr -useb https://raw.githubusercontent.com/adolfousier/ratifact/main/src/scripts/windows/install.ps1 | iex"
+```
+
+### Already Have Rust and Docker?
+
+If you already have the prerequisites installed:
+
+```bash
+git clone https://github.com/adolfousier/ratifact.git && cd ratifact && cargo build && ./target/debug/ratifact
 ```
 
 ### Build with Make

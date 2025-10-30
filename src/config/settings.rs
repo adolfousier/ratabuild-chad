@@ -34,6 +34,7 @@ pub fn load_config() -> Config {
         scan_paths: vec![".".to_string()],
         retention_days: 30,
         debug_logs_enabled,
+        excluded_paths: vec![],
     }
 }
 
@@ -44,6 +45,7 @@ pub fn save_config(config: &Config) -> Result<(), Box<dyn std::error::Error>> {
         scan_paths: config.scan_paths.clone(),
         retention_days: config.retention_days,
         debug_logs_enabled: config.debug_logs_enabled,
+        excluded_paths: config.excluded_paths.clone(),
     };
     let toml_string = toml::to_string(&save_config)?;
     fs::write("src/config/config.toml", toml_string)?;

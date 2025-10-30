@@ -1,4 +1,4 @@
-goood now lets update to next version v0.1.1 on cargo and CHANGELOG new entry with the above, and then commit and push to main and new version with release notes similarly to last version
+goood now lets update to next version v0.1.12 on cargo and CHANGELOG new entry with the above, and then commit and push to main and new version with release notes similarly to last version
 
 
 

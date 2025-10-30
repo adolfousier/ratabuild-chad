@@ -153,36 +153,39 @@ impl PopupState {
                 f.render_widget(para, popup_area);
             }
             PopupState::ArtifactActions { selected } => {
-                let popup_area = centered_rect(25, 25, area);
+                let popup_area = centered_rect(60, 30, area);
                 f.render_widget(Clear, popup_area);
                 let options = ["Delete", "Rebuild"];
                 let mut items = Vec::new();
                 for (i, &opt) in options.iter().enumerate() {
                     let style = if i == *selected {
-                        Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+                        Style::default().fg(Color::Black).bg(Color::Red).add_modifier(Modifier::BOLD)
                     } else {
-                        Style::default()
+                        Style::default().fg(Color::Black).bg(Color::Red)
                     };
                     items.push(ListItem::new(Span::styled(opt, style)));
                 }
                 let list = List::new(items)
-                    .block(Block::default().title("Artifact Actions (↑↓ Enter Esc)").borders(Borders::ALL));
+                    .block(Block::default().title("⚠️ SELECT ACTION").borders(Borders::ALL).style(Style::default().fg(Color::Black).bg(Color::Red)).padding(Padding::new(2, 2, 1, 1)))
+                    .style(Style::default().bg(Color::Red));
                 f.render_widget(list, popup_area);
             }
             PopupState::ClearAllConfirmation => {
-                let popup_area = centered_rect(50, 20, area);
+                let popup_area = centered_rect(70, 35, area);
                 f.render_widget(Clear, popup_area);
-                let text = "Are you sure you want to clear all builds?\nThis will delete all artifacts from the filesystem.\n(y: Confirm, n: Cancel)";
+                let text = "⚠️  CLEAR ALL BUILDS - PERMANENT DELETION\n\nThis will delete ALL artifacts from the filesystem.\nThis action cannot be undone.\n\nAre you absolutely sure? (y: Confirm, n: Cancel)";
                 let para = Paragraph::new(text)
-                    .block(Block::default().title("⚠️ Clear All Builds").borders(Borders::ALL));
+                    .block(Block::default().title("🔴 CLEAR ALL BUILDS").borders(Borders::ALL).style(Style::default().fg(Color::Black).bg(Color::Red)).padding(Padding::new(2, 2, 1, 1)))
+                    .style(Style::default().fg(Color::Black).bg(Color::Red));
                 f.render_widget(para, popup_area);
             }
             PopupState::ConfirmAction { message, .. } => {
-                let popup_area = centered_rect(50, 15, area);
+                let popup_area = centered_rect(70, 35, area);
                 f.render_widget(Clear, popup_area);
-                let text = format!("{}\n\nPress Enter to confirm, Esc to cancel.", message);
+                let text = message.clone();
                 let para = Paragraph::new(text)
-                    .block(Block::default().title("Confirm Action").borders(Borders::ALL));
+                    .block(Block::default().title("⚠️ CONFIRM ACTION").borders(Borders::ALL).style(Style::default().fg(Color::Black).bg(Color::Yellow)).padding(Padding::new(2, 2, 1, 1)))
+                    .style(Style::default().fg(Color::Black).bg(Color::Yellow));
                 f.render_widget(para, popup_area);
             }
             PopupState::Progress { message } => {

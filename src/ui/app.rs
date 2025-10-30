@@ -348,7 +348,7 @@ impl App {
 
         self.popup_state.draw(f, size);
 
-        let footer = Paragraph::new("Tab: Focus | s: Scan | h: History | ↑↓: Navigate | d: Delete | x: Exclude | r: Rebuild | e: Settings | l: Logs | Shift+D: Clear All | q: Quit")
+        let footer = Paragraph::new("Tab: Focus | s: Scan | d: Delete | x: Exclude | r: Rebuild | e: Settings | l: Logs | Shift+D: Clear All | q: Quit")
             .style(Style::default().fg(Color::Black).bg(Color::LightGreen));
         f.render_widget(footer, chunks[2]);
     }

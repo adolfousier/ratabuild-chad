@@ -105,6 +105,28 @@ impl App {
             self.scanned = true;
             self.popup_state = PopupState::Info { message: format!("Scan complete. Found {} artifacts.", self.artifacts.len()) };
             let _ = self.load_history().await;
+
+            // Trigger automatic cleanup if enabled
+            if self.automatic_removal {
+                let pool = self.logger.pool.clone();
+                let retention_days = self.config.retention_days;
+                tokio::spawn(async move {
+                    // Get old artifact paths from database
+                    match crate::db::schema::get_old_artifact_paths(&pool, retention_days).await {
+                        Ok(old_paths) => {
+                            // Delete directories from disk
+                            for path in old_paths {
+                                let _ = std::fs::remove_dir_all(&path);
+                            }
+                            // Remove entries from database
+                            let _ = crate::db::schema::delete_old_builds_from_db(&pool, retention_days).await;
+                        }
+                        Err(_) => {
+                            // Cleanup query failed, continue normally
+                        }
+                    }
+                });
+            }
         }
 
         // Use non-blocking poll with timeout to allow UI to redraw
@@ -135,7 +157,15 @@ impl App {
                         self.popup_state = PopupState::new_dir_browse();
                     }
                     PopupCommand::ToggleRemoval => {
-                        self.automatic_removal = !self.automatic_removal;
+                        if !self.automatic_removal {
+                            // Show warning when enabling automatic removal
+                            let message = "⚠️  AUTOMATIC REMOVAL WILL DELETE OLD ARTIFACTS\n\nPlease verify your build directories in the list above.\nAny directories matching common build paths older than\nretention days will be permanently deleted.\n\nEnable automatic removal? (Enter: Yes, Esc: No)".to_string();
+                            let action = "enable_automatic_removal".to_string();
+                            self.popup_state = PopupState::ConfirmAction { message, action };
+                        } else {
+                            // Disabling is safe, just toggle
+                            self.automatic_removal = false;
+                        }
                     }
                     PopupCommand::SetValue { key, value } => {
                         if key == "Retention Days" {
@@ -225,6 +255,10 @@ impl App {
                                         save_config(&self.config).ok();
                                         self.popup_state = PopupState::Info { message: "Path added to exclusion list.".to_string() };
                                     }
+                                }
+                                "enable_automatic_removal" => {
+                                    self.automatic_removal = true;
+                                    self.popup_state = PopupState::Info { message: "Automatic removal enabled. Old artifacts will be cleaned up after scans.".to_string() };
                                 }
                                 _ => {}
                             }
@@ -540,18 +574,35 @@ impl App {
                 logs.push("Starting scan...".to_string());
             }
             let common_dirs = [
+                // Rust
                 "target",
+                // C/C++
                 "build",
                 ".build",
-                "node_modules",
-                "__pycache__",
-                "dist",
-                "out",
-                "vendor",
                 "cmake-build-debug",
                 "cmake-build-release",
                 "Debug",
                 "Release",
+                // JavaScript/TypeScript
+                "node_modules",
+                "dist",
+                ".next",
+                ".parcel-cache",
+                ".cache",
+                // Python
+                "__pycache__",
+                ".eggs",
+                "eggs",
+                // Java/Gradle
+                ".gradle",
+                // PHP/Composer
+                "vendor",
+                // Ruby
+                ".bundle",
+                // General build outputs
+                "out",
+                ".output",
+                ".nyc_output",
             ];
             let mut total_count = 0;
             for scan_path in scan_paths {

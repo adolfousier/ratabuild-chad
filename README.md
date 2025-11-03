@@ -21,6 +21,7 @@ This TUI app runs in your terminal and helps you monitor build processes, track 
 - [How to Use It](#how-to-use-it)
 - [What You Need](#what-you-need)
 - [Special Notes](#special-notes)
+- [Uninstall](#uninstall)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -121,6 +122,71 @@ Use Enter in the settings panel to edit these options via popups.
 **First time running**: The app connects to PostgreSQL and creates tables automatically.
 
 **Permissions**: Ensure read/write access to project directories and PostgreSQL access.
+
+## Uninstall
+
+To uninstall Ratifact and remove all associated components, use the uninstall scripts:
+
+### Linux
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/adolfousier/ratifact/main/src/scripts/linux/uninstall.sh | bash
+```
+
+Or locally:
+
+```bash
+bash src/scripts/linux/uninstall.sh
+```
+
+Or using Make:
+
+```bash
+make uninstall
+```
+
+### macOS
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/adolfousier/ratifact/main/src/scripts/macos/uninstall.sh | bash
+```
+
+Or locally:
+
+```bash
+bash src/scripts/macos/uninstall.sh
+```
+
+Or using Make:
+
+```bash
+make uninstall
+```
+
+### Windows
+
+Open PowerShell as Administrator and run:
+
+```powershell
+powershell -Command "iwr -useb https://raw.githubusercontent.com/adolfousier/ratifact/main/src/scripts/windows/uninstall.ps1 | iex"
+```
+
+Or locally:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File src/scripts/windows/uninstall.ps1
+```
+
+### What the Uninstall Script Does
+
+The uninstall process will:
+
+1. **Stop PostgreSQL container** - Shuts down the running Docker container
+2. **Remove database volume** (optional) - You'll be prompted to confirm deletion of all database data
+3. **Clean build artifacts** - Removes compiled binaries and intermediate build files
+4. **Remove installation directory** (optional) - You can choose to keep the source code or remove it completely
+
+The script logs all actions to a file (e.g., `/tmp/ratifact-uninstall-*.log`) for reference.
 
 ## Contributing
 

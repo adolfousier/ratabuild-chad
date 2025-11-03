@@ -1,6 +1,6 @@
 # Makefile for Ratifact by Neura
 
-.PHONY: build run clean test check release help
+.PHONY: build run clean test check release help uninstall
 
 # Build the project
 build:
@@ -57,16 +57,39 @@ clippy:
 # Run all checks
 all: check test
 
+# Uninstall the application
+uninstall:
+	@echo "Starting uninstallation process..."
+	@echo "Please run the appropriate script for your OS:"
+	@echo ""
+	@echo "Linux:"
+	@echo "  bash src/scripts/linux/uninstall.sh"
+	@echo ""
+	@echo "macOS:"
+	@echo "  bash src/scripts/macos/uninstall.sh"
+	@echo ""
+	@echo "Windows (PowerShell as Administrator):"
+	@echo "  powershell -ExecutionPolicy Bypass -File src/scripts/windows/uninstall.ps1"
+	@echo ""
+	@echo "Or from remote:"
+	@echo ""
+	@echo "Linux/macOS:"
+	@echo "  curl -fsSL https://raw.githubusercontent.com/adolfousier/ratifact/main/src/scripts/linux/uninstall.sh | bash"
+	@echo ""
+	@echo "Windows (PowerShell as Administrator):"
+	@echo "  powershell -Command \"iwr -useb https://raw.githubusercontent.com/adolfousier/ratifact/main/src/scripts/windows/uninstall.ps1 | iex\""
+
 # Show help
 help:
 	@echo "Available targets:"
-	@echo "  build    - Build the project"
-	@echo "  run      - Build and run the project"
-	@echo "  test     - Run tests"
-	@echo "  check    - Check code without building"
-	@echo "  release  - Build release version"
-	@echo "  clean    - Clean build artifacts"
-	@echo "  fmt      - Format code"
-	@echo "  clippy   - Lint code"
-	@echo "  all      - Run check and test"
-	@echo "  help     - Show this help"
+	@echo "  build       - Build the project"
+	@echo "  run         - Build and run the project"
+	@echo "  test        - Run tests"
+	@echo "  check       - Check code without building"
+	@echo "  release     - Build release version"
+	@echo "  clean       - Clean build artifacts"
+	@echo "  fmt         - Format code"
+	@echo "  clippy      - Lint code"
+	@echo "  all         - Run check and test"
+	@echo "  uninstall   - Show uninstall instructions"
+	@echo "  help        - Show this help"

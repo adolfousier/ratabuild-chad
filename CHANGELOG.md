@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.14] - 2025-11-03
+
+### Added
+
+- **Uninstall scripts** - Cross-platform uninstall scripts for Linux, macOS, and Windows
+- **Uninstall target in Makefile** - `make uninstall` command to show uninstall instructions
+- **Uninstall documentation** - Added uninstall section to README with usage instructions
+
+### Changed
+
+- **Debug logs enabled by default** - Changed default value of debug_logs_enabled to true in config.toml
+
+---
+
 ## [0.1.13] - 2025-10-30
 
 ### Added
